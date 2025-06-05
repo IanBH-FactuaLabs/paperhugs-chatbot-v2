@@ -1,10 +1,10 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import useChatState from '../hooks/useChatState';
 import ChatRenderer from './ChatRenderer';
 
-export default function Page() {
+function ChatPageWithParams() {
   const searchParams = useSearchParams();
   const userId = searchParams?.get('userId') ?? '';
   const cardId = searchParams?.get('cardId') ?? '';
@@ -23,4 +23,12 @@ export default function Page() {
 
   const chat = useChatState(userId, cardId);
   return <ChatRenderer {...chat} />;
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>🔄 Preparing your chat session...</div>}>
+      <ChatPageWithParams />
+    </Suspense>
+  );
 }
