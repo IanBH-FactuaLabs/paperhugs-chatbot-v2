@@ -7,19 +7,20 @@ export default function Page() {
   const [session, setSession] = useState({ userId: '', cardId: '' });
 
   useEffect(() => {
-    const handler = (e: CustomEvent) => {
-      const { userId, cardId } = e.detail || {};
-      console.log("✅ Received session data:", { userId, cardId });
-      if (userId && cardId) {
-        setSession({ userId, cardId });
+    const handleMessage = (e: MessageEvent) => {
+      if (typeof e.data === 'object' && e.data.type === 'initialize-session') {
+        const { userId, cardId } = e.data;
+        console.log("✅ Chatbot received session:", { userId, cardId });
+        if (userId && cardId) {
+          setSession({ userId, cardId });
+        }
       }
     };
 
-    window.addEventListener('openChatbot', handler as EventListener);
-    return () => window.removeEventListener('openChatbot', handler as EventListener);
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // ⛔️ Prevent premature chat load
   if (!session.userId || !session.cardId) {
     return (
       <div className="text-center p-4 text-gray-600">
