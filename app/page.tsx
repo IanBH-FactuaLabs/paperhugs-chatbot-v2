@@ -9,8 +9,10 @@ function ChatPageWithParams() {
   const [session, setSession] = useState<{ userId: string; cardId: string } | null>(null);
 
   useEffect(() => {
-    const userId = searchParams.get('userId');
-    const cardId = searchParams.get('cardId');
+    if (!searchParams) return;
+
+    const userId = searchParams.get('userId') ?? '';
+    const cardId = searchParams.get('cardId') ?? '';
 
     if (userId && cardId) {
       setSession({ userId, cardId });
