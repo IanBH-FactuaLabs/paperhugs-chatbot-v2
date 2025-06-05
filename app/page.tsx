@@ -25,6 +25,7 @@ function ChatWithParams() {
   return <ChatRenderer {...chat} />;
 }
 
+
 export default function Page() {
   return (
     <Suspense fallback={<div>🔄 Preparing your chat session...</div>}>
