@@ -1,30 +1,24 @@
-// File: /app/api/receive-image/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getImage } from '@/lib/imageStore';
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { userId, cardId, imageUrl, revisionMessage } = body;
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+  const cardId = searchParams.get('cardId');
 
-    if (!userId || !cardId || !imageUrl) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    // Send to all listening tabs/clients
-    const allClients = await self.clients.matchAll();
-    for (const client of allClients) {
-      client.postMessage({
-        type: 'image-received',
-        userId,
-        cardId,
-        imageUrl,
-        revisionMessage
-      });
-    }
-
-    return NextResponse.json({ status: 'ok' });
-  } catch (error) {
-    console.error('Error in receive-image POST handler:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  if (!userId || !cardId) {
+    return NextResponse.json({ error: 'Missing userId or cardId' }, { status: 400 });
   }
+
+  const imageData = getImage(userId, cardId);
+
+  if (!imageData) {
+    return NextResponse.json({ status: 'pending' });
+  }
+
+  return NextResponse.json({
+    status: 'complete',
+    imageUrl: imageData.imageUrl,
+    imagePrompt: imageData.imagePrompt,
+  });
 }
