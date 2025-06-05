@@ -6,24 +6,24 @@ import ChatRenderer from './ChatRenderer';
 
 function ChatPageWithParams() {
   const searchParams = useSearchParams();
-  const [session, setSession] = useState<{ userId: string; cardId: string } | null>(null);
+  const userId = searchParams?.get('userId') ?? '';
+  const cardId = searchParams?.get('cardId') ?? '';
+
+  const [ready, setReady] = useState(false);
+
+  // Invoke the hook unconditionally
+  const chat = useChatState(userId, cardId);
 
   useEffect(() => {
-    if (!searchParams) return;
-
-    const userId = searchParams.get('userId') ?? '';
-    const cardId = searchParams.get('cardId') ?? '';
-
     if (userId && cardId) {
-      setSession({ userId, cardId });
+      setReady(true);
     }
-  }, [searchParams]);
+  }, [userId, cardId]);
 
-  if (!session) {
+  if (!ready) {
     return <div>🔄 Preparing your chat session...</div>;
   }
 
-  const chat = useChatState(session.userId, session.cardId);
   return <ChatRenderer {...chat} />;
 }
 
