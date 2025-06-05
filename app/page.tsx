@@ -22,11 +22,7 @@ export default function Page() {
   }, []);
 
   if (!session?.userId || !session?.cardId) {
-    return (
-      <div className="text-center p-4 text-gray-600">
-        🔄 Preparing your chat session...
-      </div>
-    );
+    return <div>🔄 Preparing your chat session...</div>;
   }
 
   const chat = useChatState(session.userId, session.cardId);
