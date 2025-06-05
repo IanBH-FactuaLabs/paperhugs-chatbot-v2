@@ -6,8 +6,8 @@ import ChatRenderer from './ChatRenderer';
 
 function ChatWithParams() {
   const params = useSearchParams();
-  const userId = params.get('userId') || '';
-  const cardId = params.get('cardId') || '';
+  const userId = params!.get('userId') || '';
+  const cardId = params!.get('cardId') || '';
 
   const [ready, setReady] = useState(false);
 
@@ -24,7 +24,6 @@ function ChatWithParams() {
   const chat = useChatState(userId, cardId);
   return <ChatRenderer {...chat} />;
 }
-
 
 export default function Page() {
   return (
