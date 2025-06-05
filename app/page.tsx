@@ -30,5 +30,6 @@ export default function Page() {
     <Suspense fallback={<div>🔄 Preparing your chat session...</div>}>
       <ChatPageWithParams />
     </Suspense>
+    
   );
 }
