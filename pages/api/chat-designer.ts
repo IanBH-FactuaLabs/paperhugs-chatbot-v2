@@ -27,7 +27,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content ?? 'Sorry, something went wrong.';
 
-    // Attempt to extract JSON metadata
     let action = null;
     let imagePrompt = null;
 
@@ -38,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         action = parsed.action;
         imagePrompt = parsed.imagePrompt;
       }
-    } catch (e) {
+    } catch {
       console.warn('No valid action metadata found.');
     }
 
