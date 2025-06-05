@@ -4,31 +4,31 @@ import { useSearchParams } from 'next/navigation';
 import useChatState from '../hooks/useChatState';
 import ChatRenderer from './ChatRenderer';
 
-function ChatWithParams() {
-  const params = useSearchParams();
-  const userId = params!.get('userId') || '';
-  const cardId = params!.get('cardId') || '';
-
-  const [ready, setReady] = useState(false);
+function ChatPageWithParams() {
+  const searchParams = useSearchParams();
+  const [session, setSession] = useState<{ userId: string; cardId: string } | null>(null);
 
   useEffect(() => {
-    if (userId && cardId) {
-      setReady(true);
-    }
-  }, [userId, cardId]);
+    const userId = searchParams.get('userId');
+    const cardId = searchParams.get('cardId');
 
-  if (!ready) {
+    if (userId && cardId) {
+      setSession({ userId, cardId });
+    }
+  }, [searchParams]);
+
+  if (!session) {
     return <div>🔄 Preparing your chat session...</div>;
   }
 
-  const chat = useChatState(userId, cardId);
+  const chat = useChatState(session.userId, session.cardId);
   return <ChatRenderer {...chat} />;
 }
 
 export default function Page() {
   return (
     <Suspense fallback={<div>🔄 Preparing your chat session...</div>}>
-      <ChatWithParams />
+      <ChatPageWithParams />
     </Suspense>
   );
 }
