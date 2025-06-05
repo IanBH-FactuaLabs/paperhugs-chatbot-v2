@@ -43,6 +43,7 @@ export default function useChatState(userId: string, cardId: string) {
 
   const onGenerate = async () => {
     if (!imagePrompt) return;
+    console.log('[TriggerZap] Payload:', { userId, cardId, imagePrompt });
 
     await fetch('/api/trigger-zap', {
       method: 'POST',
