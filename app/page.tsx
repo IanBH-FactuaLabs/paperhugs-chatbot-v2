@@ -4,10 +4,10 @@ import { useSearchParams } from 'next/navigation';
 import useChatState from '../hooks/useChatState';
 import ChatRenderer from './ChatRenderer';
 
-function ChatPageWithParams() {
-  const searchParams = useSearchParams();
-  const userId = searchParams?.get('userId') ?? '';
-  const cardId = searchParams?.get('cardId') ?? '';
+function ChatWithParams() {
+  const params = useSearchParams();
+  const userId = params.get('userId') || '';
+  const cardId = params.get('cardId') || '';
 
   const [ready, setReady] = useState(false);
 
@@ -28,8 +28,7 @@ function ChatPageWithParams() {
 export default function Page() {
   return (
     <Suspense fallback={<div>🔄 Preparing your chat session...</div>}>
-      <ChatPageWithParams />
+      <ChatWithParams />
     </Suspense>
-    
   );
 }
