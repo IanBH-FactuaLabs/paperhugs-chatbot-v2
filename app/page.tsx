@@ -4,7 +4,7 @@ import useChatState from '../hooks/useChatState';
 import ChatRenderer from './ChatRenderer';
 
 export default function Page() {
-  const [session, setSession] = useState({ userId: '', cardId: '' });
+  const [session, setSession] = useState<{ userId: string; cardId: string } | null>(null);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
@@ -21,7 +21,7 @@ export default function Page() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  if (!session.userId || !session.cardId) {
+  if (!session?.userId || !session?.cardId) {
     return (
       <div className="text-center p-4 text-gray-600">
         🔄 Preparing your chat session...
