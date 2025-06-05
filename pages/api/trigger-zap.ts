@@ -13,12 +13,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('📤 Sending to Zapier:', { userId, cardId, imagePrompt }); // ✅ NEW
 
     const zapierResponse = await fetch('https://hooks.zapier.com/hooks/catch/18620594/2vsp223/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userId, cardId, imagePrompt })
-    });
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          cardId,
+          imagePrompt
+        })
+      });
 
     const zapierText = await zapierResponse.text();
     console.log('📥 Zapier responded with:', zapierText); // ✅ NEW
