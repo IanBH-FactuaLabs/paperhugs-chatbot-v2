@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const endpoint = `https://api.outseta.com/v1/crm/accounts/user/{userId}`;
+    const endpoint = `https://api.outseta.com/v1/crm/accounts/user/${userId}`;
     const payload = { [fieldName]: imageUrl };
 
     console.log(`PATCH → ${endpoint}`);
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       const errorText = await res.text();
       console.error(`[Outseta PATCH error ${res.status}]`, errorText);
       return NextResponse.json(
-        { error: 'Failed to update Outseta person field', status: res.status, detail: errorText },
+        { error: 'Failed to update Outseta account field', status: res.status, detail: errorText },
         { status: res.status }
       );
     }
