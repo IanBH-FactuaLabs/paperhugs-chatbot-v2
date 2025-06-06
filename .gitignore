@@ -4,6 +4,7 @@ node_modules
 
 # Builds
 dist
+public/output.css # Optional: Ignore Tailwind output if manually built
 
 # Local env
 .env
@@ -16,3 +17,6 @@ yarn-error.log*
 
 # macOS
 .DS_Store
+
+# TailwindCSS (optional output, not config)
+*.css.map
