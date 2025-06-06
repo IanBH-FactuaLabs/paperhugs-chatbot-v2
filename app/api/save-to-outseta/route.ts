@@ -6,10 +6,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log("[/api/save-to-outseta] Incoming body:", body);
 
-    const { accountId, fieldName, imageUrl } = body;
+    const { accountId: accountUid, fieldName, imageUrl } = body;
 
-    if (!accountId || !fieldName || !imageUrl) {
-      console.warn("[/api/save-to-outseta] ❌ Missing fields", { accountId, fieldName, imageUrl });
+    if (!accountUid || !fieldName || !imageUrl) {
+      console.warn("[/api/save-to-outseta] ❌ Missing fields", { accountUid, fieldName, imageUrl });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -22,7 +22,31 @@ export async function POST(req: NextRequest) {
     }
 
     const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
-    const accountEndpoint = `https://api.outseta.com/v1/crm/accounts/${accountId}`;
+
+    // Step 1: Fetch full account object via UID
+    const lookupRes = await fetch(`https://api.outseta.com/v1/crm/accounts/uid/${accountUid}`, {
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!lookupRes.ok) {
+      const errText = await lookupRes.text();
+      console.error(`[Account UID lookup failed ${lookupRes.status}]`, errText);
+      return NextResponse.json({ error: 'Failed to fetch account by UID', detail: errText }, { status: lookupRes.status });
+    }
+
+    const account = await lookupRes.json();
+    const internalId = account?.Id;
+
+    if (!internalId) {
+      console.error("[/api/save-to-outseta] ❌ No internal account ID found");
+      return NextResponse.json({ error: 'No internal ID found for account' }, { status: 500 });
+    }
+
+    // Step 2: PATCH the account using internal ID
+    const accountEndpoint = `https://api.outseta.com/v1/crm/accounts/${internalId}`;
     const payload = { [fieldName]: imageUrl };
 
     console.log(`PATCH → ${accountEndpoint}`);
