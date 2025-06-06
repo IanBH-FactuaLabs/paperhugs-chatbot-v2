@@ -60,17 +60,23 @@ export default function ChatRenderer({
   const handleSaveToOutseta = async () => {
     if (!userId || !cardId || !imageUrl) return;
     try {
-      const fieldName = `${cardId.toLowerCase()}image`;
+      const fieldName = `${cardId}Image`; // Match Outseta case exactly
       const res = await fetch('/api/save-to-outseta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, fieldName, imageUrl })
       });
+
       const result = await res.json();
-      alert(result.ok ? '✅ Card saved!' : '❌ Failed to save image.');
+      if (res.ok) {
+        alert('✅ Card saved!');
+      } else {
+        console.error('❌ Failed to save:', result);
+        alert(`❌ Failed to save image: ${result.detail || result.error}`);
+      }
     } catch (err) {
-      console.error('Save failed:', err);
-      alert('❌ Error saving to Outseta.');
+      console.error('❌ Save failed:', err);
+      alert('❌ Unexpected error saving to Outseta.');
     }
   };
 
