@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getImage, storeImage } from '@/lib/imageStore'; // ✅ Make sure this matches your tsconfig + folder structure
+import { getImage, storeImage } from '@/lib/imageStore';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     status: 'complete',
     imageUrl: imageData.imageUrl,
-    imagePrompt: imageData.imagePrompt,
+    imagePrompt: imageData.imagePrompt
   });
 }
 
@@ -28,12 +28,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('[receive-image POST] Incoming body:', body);
 
-    const { userId, cardId, imageUrl, imagePrompt } = body;
+    const userId = (body.userId ?? '').trim();
+    const cardId = (body.cardId ?? '').trim();
+    const imageUrl = (body.imageUrl ?? '').trim();
+    const imagePrompt = (body.imagePrompt ?? '').trim();
 
     if (!userId || !cardId || !imageUrl || !imagePrompt) {
+      console.warn('[receive-image POST] Missing required fields:', { userId, cardId, imageUrl, imagePrompt });
       return NextResponse.json(
         {
-          error: 'Missing imageUrl or summary',
+          error: 'Missing userId, cardId, imageUrl, or imagePrompt',
           details: { userId, cardId, imageUrl, imagePrompt }
         },
         { status: 400 }
@@ -42,9 +46,10 @@ export async function POST(req: NextRequest) {
 
     storeImage(userId, cardId, imageUrl, imagePrompt);
 
+    console.log('[receive-image POST] Image stored successfully');
     return NextResponse.json({ status: 'success' });
   } catch (error) {
-    console.error('Error in /api/receive-image POST:', error);
+    console.error('[receive-image POST] Unexpected error:', error);
     return NextResponse.json({ error: 'Invalid request body' }, { status: 500 });
   }
 }
