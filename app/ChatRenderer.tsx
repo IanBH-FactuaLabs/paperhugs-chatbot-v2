@@ -72,8 +72,7 @@ export default function ChatRenderer({
 
     try {
       const fieldName = `${cardId}Image`;
-      const zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/18620594/uyot2sc/';
-      const res = await fetch(zapierWebhookUrl, {
+      const res = await fetch('/api/proxy-zapier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
