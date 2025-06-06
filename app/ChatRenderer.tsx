@@ -9,6 +9,8 @@ export default function ChatRenderer({
   imagePrompt,
   imageUrl,
   status,
+  userId,
+  cardId,
   setInput,
   onSend,
   onGenerate
@@ -19,6 +21,8 @@ export default function ChatRenderer({
   imagePrompt: string | null;
   imageUrl: string | null;
   status: 'idle' | 'polling' | 'complete' | 'initializing';
+  userId: string;
+  cardId: string;
   setInput: (val: string) => void;
   onSend: () => void;
   onGenerate: () => void;
@@ -51,6 +55,23 @@ export default function ChatRenderer({
     ) : (
       <span>{text}</span>
     );
+  };
+
+  const handleSaveToOutseta = async () => {
+    if (!userId || !cardId || !imageUrl) return;
+    try {
+      const fieldName = `${cardId.toLowerCase()}image`;
+      const res = await fetch('/api/save-to-outseta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, fieldName, imageUrl })
+      });
+      const result = await res.json();
+      alert(result.ok ? '✅ Card saved!' : '❌ Failed to save image.');
+    } catch (err) {
+      console.error('Save failed:', err);
+      alert('❌ Error saving to Outseta.');
+    }
   };
 
   return (
@@ -112,6 +133,12 @@ export default function ChatRenderer({
               alt="Generated card"
               className="max-w-full max-h-[400px] mx-auto rounded shadow"
             />
+            <button
+              onClick={handleSaveToOutseta}
+              className="mt-4 bg-green-600 text-white px-5 py-2 rounded shadow hover:bg-green-700 transition"
+            >
+              💾 Save to My Cards
+            </button>
           </div>
         )}
 
