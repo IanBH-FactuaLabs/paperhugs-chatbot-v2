@@ -1,3 +1,5 @@
+'use client';
+import { useEffect, useRef } from 'react';
 import type { Message } from '../lib/schema';
 
 export default function ChatRenderer({
@@ -21,11 +23,44 @@ export default function ChatRenderer({
   onSend: () => void;
   onGenerate: () => void;
 }) {
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, status, imageUrl]);
+
+  const formatStructuredReply = (content: string) => {
+    const lines = content
+      .split(' - ')
+      .map(part => part.trim())
+      .map((line, i) => {
+        const [label, ...rest] = line.split(':');
+        if (!rest.length) return null;
+        return (
+          <li key={i}>
+            <strong>{label.trim()}:</strong> {rest.join(':').trim()}
+          </li>
+        );
+      })
+      .filter(Boolean);
+
+    return <ul className="list-disc ml-6 mt-1 text-left">{lines}</ul>;
+  };
+
+  const isStructuredReply = (content: string) => content.includes('Occasion:');
+  const isHiddenJsonAction = (content: string) => {
+    return (
+      content.startsWith('{') &&
+      content.includes('"action":"generate_image"') &&
+      content.includes('"imagePrompt"')
+    );
+  };
+
   return (
     <div className="max-w-2xl mx-auto mt-10 p-4 font-sans">
       <h1 className="text-center text-2xl font-bold mb-4">PaperHugs 🎨</h1>
 
-      <div className="border rounded p-4 max-h-[70vh] overflow-y-auto bg-gray-50 mb-4">
+      <div className="border rounded p-4 max-h-[60vh] overflow-y-auto bg-gray-50 mb-4">
         {status === 'initializing' && (
           <div className="text-center text-gray-500">
             <div className="animate-spin inline-block w-6 h-6 border-2 border-t-blue-500 border-gray-300 rounded-full mr-2" />
@@ -33,19 +68,27 @@ export default function ChatRenderer({
           </div>
         )}
 
-        {messages.map((m, i) => (
-          <div key={i} className={`mb-3 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
-            <span
-              className={`inline-block px-4 py-2 rounded-lg max-w-xs break-words ${
-                m.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-900'
-              }`}
-            >
-              {m.content}
-            </span>
-          </div>
-        ))}
+        {messages.map((m, i) => {
+          if (m.role === 'assistant' && isHiddenJsonAction(m.content)) return null;
+
+          return (
+            <div key={i} className={`mb-3 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
+              <div
+                className={`inline-block px-4 py-2 rounded-lg max-w-xs break-words ${
+                  m.role === 'user'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 text-gray-900'
+                }`}
+              >
+                {m.role === 'assistant' && isStructuredReply(m.content) ? (
+                  formatStructuredReply(m.content)
+                ) : (
+                  <span>{m.content}</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
 
         {imagePrompt && status === 'idle' && (
           <div className="text-center mt-6">
@@ -74,6 +117,8 @@ export default function ChatRenderer({
             />
           </div>
         )}
+
+        <div ref={chatEndRef} />
       </div>
 
       <div className="flex gap-2">

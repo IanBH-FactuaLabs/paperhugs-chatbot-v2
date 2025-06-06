@@ -38,26 +38,39 @@ export default function useChatState(
     const res = await fetch('/api/chat-designer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, cardId, messages: newMessages.map(({ role, content }) => ({ role, content })) })
+      body: JSON.stringify({
+        userId,
+        cardId,
+        messages: newMessages.map(({ role, content }) => ({ role, content }))
+      })
     });
 
     const data = await res.json();
-    const reply: Message = {
-      role: 'assistant',
-      content: data.reply,
-      action: data.action || null,
-      imagePrompt: data.imagePrompt || null
-    };
 
-    setMessages([...newMessages, reply]);
-    if (reply.imagePrompt) {
-      setImagePrompt(reply.imagePrompt);
+    // Save prompt separately so it can be used for Zapier, but don’t show the raw JSON in chat
+    let replyMessages: Message[] = [];
+
+    if (data.reply?.trim()?.startsWith('{') && data.reply.includes('"action":"generate_image"')) {
+      // Don’t display the JSON string in chat, but store prompt
+      if (data.imagePrompt) setImagePrompt(data.imagePrompt);
+    } else {
+      replyMessages.push({
+        role: 'assistant',
+        content: data.reply,
+        action: data.action || null,
+        imagePrompt: data.imagePrompt || null
+      });
+
+      if (data.imagePrompt) setImagePrompt(data.imagePrompt);
     }
+
+    setMessages([...newMessages, ...replyMessages]);
     setLoading(false);
   };
 
   const onGenerate = async () => {
     if (!imagePrompt) return;
+
     console.log('[TriggerZap] Payload:', { userId, cardId, imagePrompt });
 
     await fetch('/api/trigger-zap', {
