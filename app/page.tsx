@@ -11,8 +11,18 @@ function ChatPageWithParams() {
 
   const [ready, setReady] = useState(false);
 
-  // Invoke the hook unconditionally
-  const chat = useChatState(userId, cardId);
+  // Always call the hook (valid in client components)
+  const {
+    messages,
+    input,
+    loading,
+    imagePrompt,
+    imageUrl,
+    status,
+    setInput,
+    onSend,
+    onGenerate
+  } = useChatState(userId, cardId);
 
   useEffect(() => {
     if (userId && cardId) {
@@ -21,15 +31,37 @@ function ChatPageWithParams() {
   }, [userId, cardId]);
 
   if (!ready) {
-    return <div>🔄 Preparing your chat session...</div>;
+    return (
+      <div className="text-center mt-10 text-gray-600">
+        <div className="animate-spin inline-block w-6 h-6 border-2 border-t-blue-500 border-gray-300 rounded-full mr-2" />
+        Preparing your chat session...
+      </div>
+    );
   }
 
-  return <ChatRenderer {...chat} />;
+  return (
+    <ChatRenderer
+      messages={messages}
+      input={input}
+      loading={loading}
+      imagePrompt={imagePrompt}
+      imageUrl={imageUrl}
+      status={status}
+      setInput={setInput}
+      onSend={onSend}
+      onGenerate={onGenerate}
+    />
+  );
 }
 
 export default function Page() {
   return (
-    <Suspense fallback={<div>🔄 Preparing your chat session...</div>}>
+    <Suspense fallback={
+      <div className="text-center mt-10 text-gray-600">
+        <div className="animate-spin inline-block w-6 h-6 border-2 border-t-blue-500 border-gray-300 rounded-full mr-2" />
+        Preparing your chat session...
+      </div>
+    }>
       <ChatPageWithParams />
     </Suspense>
   );
