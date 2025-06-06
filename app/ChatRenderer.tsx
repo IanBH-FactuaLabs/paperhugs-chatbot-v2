@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { Message } from '../lib/schema';
 
 export default function ChatRenderer({
@@ -66,11 +66,10 @@ export default function ChatRenderer({
         )}
 
         {messages.map((m, i) => {
-          if (m.role === 'assistant' && m.content.startsWith('{') && m.content.includes('"generate_image"')) {
-            return null;
-          }
-
           const visibleContent = extractVisibleContent(m.content);
+
+          // Skip rendering hidden action JSON-only replies
+          if (m.role === 'assistant' && !visibleContent) return null;
 
           return (
             <div key={i} className={`mb-3 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
@@ -81,7 +80,9 @@ export default function ChatRenderer({
                     : 'bg-gray-200 text-gray-900'
                 }`}
               >
-                {m.role === 'assistant' ? formatMarkdownBullets(visibleContent) : <span>{visibleContent}</span>}
+                {m.role === 'assistant'
+                  ? formatMarkdownBullets(visibleContent)
+                  : <span>{visibleContent}</span>}
               </div>
             </div>
           );
