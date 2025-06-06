@@ -1,11 +1,8 @@
-// ✅ Create a new file for in-memory image storage
-// /lib/imageStore.ts
+const imageStore: Record<string, { imageUrl: string; imagePrompt: string; revisionMessage?: string }> = {};
 
-const imageStore: Record<string, { imageUrl: string; revisionMessage?: string }> = {};
-
-export function storeImage(userId: string, cardId: string, imageUrl: string, revisionMessage?: string) {
+export function storeImage(userId: string, cardId: string, imageUrl: string, imagePrompt: string, revisionMessage?: string) {
   const key = `${userId}_${cardId}`;
-  imageStore[key] = { imageUrl, revisionMessage };
+  imageStore[key] = { imageUrl, imagePrompt, revisionMessage };
 }
 
 export function getImage(userId: string, cardId: string) {
