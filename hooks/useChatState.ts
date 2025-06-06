@@ -27,6 +27,23 @@ export default function useChatState(
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'polling' | 'complete'>('idle');
 
+  const extractActionJson = (text: string) => {
+    const match = text.match(/\{[^}]*"action":"generate_image"[^}]*\}/);
+    if (!match) return { cleanedText: text, prompt: null };
+
+    let prompt: string | null = null;
+
+    try {
+      const parsed = JSON.parse(match[0]);
+      prompt = parsed.imagePrompt || null;
+    } catch {
+      prompt = null;
+    }
+
+    const cleanedText = text.replace(match[0], '').trim();
+    return { cleanedText, prompt };
+  };
+
   const onSend = async () => {
     if (!input.trim()) return;
 
@@ -46,25 +63,23 @@ export default function useChatState(
     });
 
     const data = await res.json();
+    let replyText: string = data.reply ?? '';
+    const { cleanedText, prompt } = extractActionJson(replyText);
 
-    // Save prompt separately so it can be used for Zapier, but don’t show the raw JSON in chat
-    let replyMessages: Message[] = [];
+    if (prompt) setImagePrompt(prompt);
 
-    if (data.reply?.trim()?.startsWith('{') && data.reply.includes('"action":"generate_image"')) {
-      // Don’t display the JSON string in chat, but store prompt
-      if (data.imagePrompt) setImagePrompt(data.imagePrompt);
-    } else {
-      replyMessages.push({
-        role: 'assistant',
-        content: data.reply,
-        action: data.action || null,
-        imagePrompt: data.imagePrompt || null
-      });
-
-      if (data.imagePrompt) setImagePrompt(data.imagePrompt);
+    if (cleanedText) {
+      setMessages([
+        ...newMessages,
+        {
+          role: 'assistant',
+          content: cleanedText,
+          action: data.action || null,
+          imagePrompt: prompt
+        }
+      ]);
     }
 
-    setMessages([...newMessages, ...replyMessages]);
     setLoading(false);
   };
 

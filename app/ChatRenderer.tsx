@@ -30,31 +30,28 @@ export default function ChatRenderer({
   }, [messages, status, imageUrl]);
 
   const formatStructuredReply = (content: string) => {
-    const lines = content
-      .split(' - ')
-      .map(part => part.trim())
-      .map((line, i) => {
-        const [label, ...rest] = line.split(':');
-        if (!rest.length) return null;
-        return (
-          <li key={i}>
-            <strong>{label.trim()}:</strong> {rest.join(':').trim()}
-          </li>
-        );
-      })
-      .filter(Boolean);
-
-    return <ul className="list-disc ml-6 mt-1 text-left">{lines}</ul>;
+    const bulletParts = content.split(' - ').filter(Boolean);
+    const bullets = bulletParts.map((item, i) => {
+      const [label, ...rest] = item.split(':');
+      if (!rest.length) return null;
+      return (
+        <li key={i}>
+          <span className="font-medium">{label.trim()}:</span> {rest.join(':').trim()}
+        </li>
+      );
+    });
+    return <ul className="list-disc ml-6 mt-1 text-left space-y-1">{bullets}</ul>;
   };
 
-  const isStructuredReply = (content: string) => content.includes('Occasion:');
-  const isHiddenJsonAction = (content: string) => {
-    return (
-      content.startsWith('{') &&
-      content.includes('"action":"generate_image"') &&
-      content.includes('"imagePrompt"')
-    );
-  };
+  const isStructuredReply = (content: string) =>
+    content.includes('Occasion:') &&
+    content.includes('Relationship:') &&
+    content.includes('Tone:');
+
+  const isHiddenJsonAction = (content: string) =>
+    content.startsWith('{') &&
+    content.includes('"action":"generate_image"') &&
+    content.includes('"imagePrompt"');
 
   return (
     <div className="max-w-2xl mx-auto mt-10 p-4 font-sans">
@@ -71,20 +68,18 @@ export default function ChatRenderer({
         {messages.map((m, i) => {
           if (m.role === 'assistant' && isHiddenJsonAction(m.content)) return null;
 
+          const isStructured = m.role === 'assistant' && isStructuredReply(m.content);
+
           return (
             <div key={i} className={`mb-3 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
               <div
-                className={`inline-block px-4 py-2 rounded-lg max-w-xs break-words ${
+                className={`inline-block px-4 py-2 rounded-lg max-w-xs break-words whitespace-pre-wrap ${
                   m.role === 'user'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 text-gray-900'
                 }`}
               >
-                {m.role === 'assistant' && isStructuredReply(m.content) ? (
-                  formatStructuredReply(m.content)
-                ) : (
-                  <span>{m.content}</span>
-                )}
+                {isStructured ? formatStructuredReply(m.content) : <span>{m.content}</span>}
               </div>
             </div>
           );
@@ -145,3 +140,4 @@ export default function ChatRenderer({
     </div>
   );
 }
+
