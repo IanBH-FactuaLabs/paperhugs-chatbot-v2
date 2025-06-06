@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getImage, storeImage } from '../../../lib/imageStore';
+import { getImage, storeImage } from '@/lib/imageStore'; // ✅ Make sure this matches your tsconfig + folder structure
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -26,11 +26,16 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log('[receive-image POST] Incoming body:', body);
+
     const { userId, cardId, imageUrl, imagePrompt } = body;
 
     if (!userId || !cardId || !imageUrl || !imagePrompt) {
       return NextResponse.json(
-        { error: 'Missing userId, cardId, imageUrl, or imagePrompt' },
+        {
+          error: 'Missing imageUrl or summary',
+          details: { userId, cardId, imageUrl, imagePrompt }
+        },
         { status: 400 }
       );
     }
