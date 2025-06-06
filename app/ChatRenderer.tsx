@@ -23,7 +23,7 @@ export default function ChatRenderer({
 }) {
   return (
     <div className="max-w-2xl mx-auto mt-10 p-4 font-sans">
-      <div className="text-center text-2xl font-bold mb-4">PaperHugs 🎨</div>
+      <h1 className="text-center text-2xl font-bold mb-4">PaperHugs 🎨</h1>
 
       <div className="border rounded p-4 h-[500px] overflow-y-auto bg-gray-50 mb-4">
         {status === 'initializing' && (
@@ -35,13 +35,19 @@ export default function ChatRenderer({
 
         {messages.map((m, i) => (
           <div key={i} className={`mb-3 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
-            <span className={`inline-block px-4 py-2 rounded-lg ${m.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`}>
+            <span
+              className={`inline-block px-4 py-2 rounded-lg max-w-xs break-words ${
+                m.role === 'user'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-900'
+              }`}
+            >
               {m.content}
             </span>
           </div>
         ))}
 
-        {imagePrompt && status !== 'complete' && (
+        {imagePrompt && status === 'idle' && (
           <div className="text-center mt-6">
             <button
               onClick={onGenerate}
@@ -59,7 +65,7 @@ export default function ChatRenderer({
           </div>
         )}
 
-        {imageUrl && (
+        {status === 'complete' && imageUrl && (
           <div className="text-center mt-6">
             <img
               src={imageUrl}
@@ -77,11 +83,16 @@ export default function ChatRenderer({
           onKeyDown={(e) => e.key === 'Enter' && onSend()}
           className="flex-1 border p-3 text-lg rounded shadow-sm"
           placeholder="Type your message..."
+          aria-label="Type your message"
         />
         <button
           onClick={onSend}
           disabled={loading}
-          className="bg-blue-600 text-white px-5 py-3 rounded font-semibold hover:bg-blue-700 transition"
+          className={`px-5 py-3 rounded font-semibold transition ${
+            loading
+              ? 'bg-blue-300 text-white cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
         >
           {loading ? '...' : 'Send'}
         </button>
