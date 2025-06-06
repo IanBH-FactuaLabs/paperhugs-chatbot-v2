@@ -37,7 +37,7 @@ export default function ChatRenderer({
 
   const formatMarkdownBullets = (text: string) => {
     const bulletPattern = /\*\*(.+?)\*\*:\s*(.+?)(?=(\s*-\s*\*\*|$))/g;
-    const bullets: JSX.Element[] = [];
+    const bullets: React.ReactNode[] = [];
     let match;
     while ((match = bulletPattern.exec(text)) !== null) {
       bullets.push(
@@ -66,10 +66,11 @@ export default function ChatRenderer({
         )}
 
         {messages.map((m, i) => {
-          const visibleContent = extractVisibleContent(m.content);
+          if (m.role === 'assistant' && m.content.startsWith('{') && m.content.includes('"generate_image"')) {
+            return null;
+          }
 
-          // Skip rendering hidden action JSON-only replies
-          if (m.role === 'assistant' && !visibleContent) return null;
+          const visibleContent = extractVisibleContent(m.content);
 
           return (
             <div key={i} className={`mb-3 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
@@ -80,9 +81,7 @@ export default function ChatRenderer({
                     : 'bg-gray-200 text-gray-900'
                 }`}
               >
-                {m.role === 'assistant'
-                  ? formatMarkdownBullets(visibleContent)
-                  : <span>{visibleContent}</span>}
+                {m.role === 'assistant' ? formatMarkdownBullets(visibleContent) : <span>{visibleContent}</span>}
               </div>
             </div>
           );
