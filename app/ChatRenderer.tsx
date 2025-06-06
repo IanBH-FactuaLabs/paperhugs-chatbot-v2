@@ -61,7 +61,7 @@ export default function ChatRenderer({
     if (!userId || !cardId || !imageUrl) return;
 
     try {
-      const res = await fetch('https://hooks.zapier.com/hooks/catch/18620594/uyot2sc/', {
+      const res = await fetch('/api/proxy-zapier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, cardId, imageUrl, imagePrompt })
