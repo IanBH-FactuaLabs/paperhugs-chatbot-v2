@@ -64,7 +64,7 @@ export default function ChatRenderer({
     );
   };
 
-  const handleSaveToOutseta = async () => {
+  const handleSaveToZapier = async () => {
     if (!accountId || !cardId || !imageUrl) {
       alert('❌ Missing required data to save card.');
       return;
@@ -72,22 +72,30 @@ export default function ChatRenderer({
 
     try {
       const fieldName = `${cardId}Image`;
-      const res = await fetch('/api/save-to-outseta', {
+      const zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/18620594/uyot2sc/';
+      const res = await fetch(zapierWebhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountId, fieldName, imageUrl })
+        body: JSON.stringify({
+          userId,
+          accountId,
+          cardId,
+          fieldName,
+          imageUrl,
+          imagePrompt
+        })
       });
 
       if (res.ok) {
-        alert('✅ Card saved to Outseta!');
+        alert('✅ Card sent to Zapier!');
       } else {
         const error = await res.text();
-        console.error('Outseta save error:', error);
-        alert('❌ Failed to save card');
+        console.error('Zapier webhook error:', error);
+        alert('❌ Failed to send card');
       }
     } catch (err) {
-      console.error('Unexpected save error:', err);
-      alert('❌ Error saving to Outseta');
+      console.error('Unexpected Zapier error:', err);
+      alert('❌ Error sending to Zapier');
     }
   };
 
@@ -114,9 +122,7 @@ export default function ChatRenderer({
             <div key={i} className={`mb-3 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
               <div
                 className={`inline-block px-4 py-2 rounded-lg max-w-xs break-words whitespace-pre-wrap ${
-                  m.role === 'user'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-900'
+                  m.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
                 }`}
               >
                 {m.role === 'assistant' ? formatMarkdownBullets(visibleContent) : <span>{visibleContent}</span>}
@@ -151,7 +157,7 @@ export default function ChatRenderer({
               className="max-w-full max-h-[400px] mx-auto rounded shadow"
             />
             <button
-              onClick={handleSaveToOutseta}
+              onClick={handleSaveToZapier}
               className="mt-4 bg-green-600 text-white px-5 py-2 rounded shadow hover:bg-green-700 transition"
             >
               💾 Save to My Cards
@@ -175,9 +181,7 @@ export default function ChatRenderer({
           onClick={onSend}
           disabled={loading}
           className={`px-5 py-3 rounded font-semibold transition ${
-            loading
-              ? 'bg-blue-300 text-white cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+            loading ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
         >
           {loading ? '...' : 'Send'}
