@@ -1,66 +1,72 @@
 import { useEffect, useState } from 'react';
 import type { Message } from '../lib/schema';
 
-export default function useChatState(userId: string, cardId: string): {
+export default function useChatState(
+  userId: string,
+  cardId: string
+): {
   messages: Message[];
   input: string;
   loading: boolean;
   imagePrompt: string | null;
   imageUrl: string | null;
-  status: 'idle' | 'polling' | 'complete' | 'initializing';
+  status: 'idle' | 'polling' | 'complete';
   setInput: (val: string) => void;
   onSend: () => void;
   onGenerate: () => void;
 } {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      content: "Hi! I’m your AI greeting card designer. What kind of card would you like to create today?",
+    }
+  ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [imagePrompt, setImagePrompt] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'polling' | 'complete' | 'initializing'>('initializing');
-
-  useEffect(() => {
-    if (userId && cardId) {
-      setStatus('idle');
-    }
-  }, [userId, cardId]);
+  const [status, setStatus] = useState<'idle' | 'polling' | 'complete'>('idle');
 
   const onSend = async () => {
     if (!input.trim()) return;
-    const userMsg: Message = { role: 'user', content: input };
-    const nextMessages = [...messages, userMsg];
-    setMessages(nextMessages);
+
+    const newMessages: Message[] = [...messages, { role: 'user', content: input }];
+    setMessages(newMessages);
     setInput('');
     setLoading(true);
 
-    const response = await fetch('/api/chat-designer', {
+    const res = await fetch('/api/chat-designer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: nextMessages })
+      body: JSON.stringify({ userId, cardId, messages: newMessages.map(({ role, content }) => ({ role, content })) })
     });
 
-    const data = await response.json();
-    const reply: Message = { role: 'assistant', content: data.reply };
-    setMessages([...nextMessages, reply]);
-    setImagePrompt(data.imagePrompt || null);
+    const data = await res.json();
+    const reply: Message = {
+      role: 'assistant',
+      content: data.reply,
+      action: data.action || null,
+      imagePrompt: data.imagePrompt || null
+    };
+
+    setMessages([...newMessages, reply]);
+    if (reply.imagePrompt) {
+      setImagePrompt(reply.imagePrompt);
+    }
     setLoading(false);
   };
 
   const onGenerate = async () => {
     if (!imagePrompt) return;
+    console.log('[TriggerZap] Payload:', { userId, cardId, imagePrompt });
 
-    setStatus('polling');
-    const response = await fetch('/api/trigger-zap', {
+    await fetch('/api/trigger-zap', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, cardId, imagePrompt })
     });
 
-    const result = await response.json();
-    console.log('[TriggerZap] Payload:', { userId, cardId, imagePrompt });
-    if (!result.ok) {
-      console.warn('⚠️ TriggerZap failed:', result);
-    }
+    setStatus('polling');
   };
 
   useEffect(() => {
