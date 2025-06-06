@@ -11,7 +11,6 @@ function ChatPageWithParams() {
 
   const [ready, setReady] = useState(false);
 
-  // Always call the hook
   const {
     messages,
     input,
@@ -50,6 +49,8 @@ function ChatPageWithParams() {
       imagePrompt={imagePrompt}
       imageUrl={imageUrl}
       status={status}
+      userId={userId}
+      cardId={cardId}
       setInput={setInput}
       onSend={onSend}
       onGenerate={onGenerate}
