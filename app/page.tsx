@@ -11,7 +11,7 @@ function ChatPageWithParams() {
 
   const [ready, setReady] = useState(false);
 
-  // Always call the hook (valid in client components)
+  // Always call the hook
   const {
     messages,
     input,
@@ -25,16 +25,19 @@ function ChatPageWithParams() {
   } = useChatState(userId, cardId);
 
   useEffect(() => {
-    if (userId && cardId) {
+    const valid = userId && cardId && userId !== 'undefined' && cardId !== 'undefined';
+    if (valid) {
       setReady(true);
     }
   }, [userId, cardId]);
 
   if (!ready) {
     return (
-      <div className="text-center mt-10 text-gray-600">
-        <div className="animate-spin inline-block w-6 h-6 border-2 border-t-blue-500 border-gray-300 rounded-full mr-2" />
-        Preparing your chat session...
+      <div className="flex items-center justify-center h-screen text-gray-700 text-lg">
+        <div className="text-center">
+          <div className="animate-spin inline-block w-8 h-8 border-4 border-t-blue-500 border-gray-300 rounded-full mb-4" />
+          <p>Loading card generator...</p>
+        </div>
       </div>
     );
   }
@@ -57,9 +60,11 @@ function ChatPageWithParams() {
 export default function Page() {
   return (
     <Suspense fallback={
-      <div className="text-center mt-10 text-gray-600">
-        <div className="animate-spin inline-block w-6 h-6 border-2 border-t-blue-500 border-gray-300 rounded-full mr-2" />
-        Preparing your chat session...
+      <div className="flex items-center justify-center h-screen text-gray-700 text-lg">
+        <div className="text-center">
+          <div className="animate-spin inline-block w-8 h-8 border-4 border-t-blue-500 border-gray-300 rounded-full mb-4" />
+          <p>Loading card generator...</p>
+        </div>
       </div>
     }>
       <ChatPageWithParams />
