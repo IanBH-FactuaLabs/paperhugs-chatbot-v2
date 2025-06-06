@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Message } from '../lib/schema';
 
 export default function useChatState(userId: string, cardId: string) {
@@ -11,6 +11,8 @@ export default function useChatState(userId: string, cardId: string) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [imagePrompt, setImagePrompt] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [status, setStatus] = useState<'idle' | 'polling' | 'complete'>('idle');
 
   const onSend = async () => {
     if (!input.trim()) return;
@@ -51,14 +53,35 @@ export default function useChatState(userId: string, cardId: string) {
       body: JSON.stringify({ userId, cardId, imagePrompt })
     });
 
-    // Optionally: reset the imagePrompt or leave it until the image returns
+    setStatus('polling');
   };
+
+  useEffect(() => {
+    if (status !== 'polling') return;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/receive-image?userId=${userId}&cardId=${cardId}`);
+        const json = await res.json();
+        if (json.status === 'complete') {
+          setImageUrl(json.imageUrl);
+          setStatus('complete');
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    };
+
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [status, userId, cardId]);
 
   return {
     messages,
     input,
     loading,
     imagePrompt,
+    imageUrl,
     setInput,
     onSend,
     onGenerate
