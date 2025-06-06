@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const endpoint = `https://api.outseta.com/v1/crm/people/${userId}`;
+    const endpoint = `https://api.outseta.com/v1/crm/accounts/user/{userId}`;
     const payload = { [fieldName]: imageUrl };
 
     console.log(`PATCH → ${endpoint}`);
