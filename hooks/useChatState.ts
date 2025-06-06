@@ -1,59 +1,66 @@
 import { useEffect, useState } from 'react';
 import type { Message } from '../lib/schema';
 
-export default function useChatState(userId: string, cardId: string) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: "Hi! I’m your AI greeting card designer. What kind of card would you like to create today?",
-    }
-  ]);
+export default function useChatState(userId: string, cardId: string): {
+  messages: Message[];
+  input: string;
+  loading: boolean;
+  imagePrompt: string | null;
+  imageUrl: string | null;
+  status: 'idle' | 'polling' | 'complete' | 'initializing';
+  setInput: (val: string) => void;
+  onSend: () => void;
+  onGenerate: () => void;
+} {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [imagePrompt, setImagePrompt] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'polling' | 'complete'>('idle');
+  const [status, setStatus] = useState<'idle' | 'polling' | 'complete' | 'initializing'>('initializing');
+
+  useEffect(() => {
+    if (userId && cardId) {
+      setStatus('idle');
+    }
+  }, [userId, cardId]);
 
   const onSend = async () => {
     if (!input.trim()) return;
-
-    const newMessages: Message[] = [...messages, { role: 'user', content: input }];
-    setMessages(newMessages);
+    const userMsg: Message = { role: 'user', content: input };
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
     setInput('');
     setLoading(true);
 
-    const res = await fetch('/api/chat-designer', {
+    const response = await fetch('/api/chat-designer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, cardId, messages: newMessages.map(({ role, content }) => ({ role, content })) })
+      body: JSON.stringify({ messages: nextMessages })
     });
 
-    const data = await res.json();
-    const reply: Message = {
-      role: 'assistant',
-      content: data.reply,
-      action: data.action || null,
-      imagePrompt: data.imagePrompt || null
-    };
-
-    setMessages([...newMessages, reply]);
-    if (reply.imagePrompt) {
-      setImagePrompt(reply.imagePrompt);
-    }
+    const data = await response.json();
+    const reply: Message = { role: 'assistant', content: data.reply };
+    setMessages([...nextMessages, reply]);
+    setImagePrompt(data.imagePrompt || null);
     setLoading(false);
   };
 
   const onGenerate = async () => {
     if (!imagePrompt) return;
-    console.log('[TriggerZap] Payload:', { userId, cardId, imagePrompt });
 
-    await fetch('/api/trigger-zap', {
+    setStatus('polling');
+    const response = await fetch('/api/trigger-zap', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, cardId, imagePrompt })
     });
 
-    setStatus('polling');
+    const result = await response.json();
+    console.log('[TriggerZap] Payload:', { userId, cardId, imagePrompt });
+    if (!result.ok) {
+      console.warn('⚠️ TriggerZap failed:', result);
+    }
   };
 
   useEffect(() => {
@@ -82,6 +89,7 @@ export default function useChatState(userId: string, cardId: string) {
     loading,
     imagePrompt,
     imageUrl,
+    status,
     setInput,
     onSend,
     onGenerate
