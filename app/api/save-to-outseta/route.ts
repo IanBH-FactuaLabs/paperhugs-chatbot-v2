@@ -12,26 +12,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const res = await fetch(`https://api.outseta.com/v1/crm/accounts/user/${userId}`, {
+    const endpoint = `https://api.outseta.com/v1/crm/people/${userId}`;
+    const payload = { [fieldName]: imageUrl };
+
+    console.log(`PATCH → ${endpoint}`);
+    console.log('Payload:', payload);
+
+    const res = await fetch(endpoint, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${process.env.OUTSETA_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        [fieldName]: imageUrl
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
-      const err = await res.text();
-      console.error('Outseta PATCH failed:', err);
-      return NextResponse.json({ error: 'Failed to save to Outseta', detail: err }, { status: 500 });
+      const errorText = await res.text();
+      console.error(`[Outseta PATCH error ${res.status}]`, errorText);
+      return NextResponse.json(
+        { error: 'Failed to update Outseta person field', status: res.status, detail: errorText },
+        { status: res.status }
+      );
     }
 
     return NextResponse.json({ status: 'success' });
   } catch (error) {
-    console.error('Unexpected error in save-to-outseta:', error);
+    console.error('[save-to-outseta] Uncaught error:', error);
     return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 });
   }
 }
