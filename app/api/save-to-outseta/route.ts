@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const res = await fetch(`https://api.outseta.com/v1/crm/accounts/user/${userId}`, {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${process.env.a2bbeee2-78f7-4541-bc89-0a4d37eaa411}`,
+        'Authorization': `Bearer ${process.env.OUTSETA_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
