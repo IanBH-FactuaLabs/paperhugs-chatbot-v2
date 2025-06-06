@@ -13,12 +13,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const accountEndpoint = `https://api.outseta.com/v1/crm/accounts/${accountId}`;
-    const payload = { [fieldName]: imageUrl };
-
-    console.log(`PATCH → ${accountEndpoint}`);
-    console.log("Payload:", payload);
-
     const apiKey = process.env.OUTSETA_API_KEY;
     const apiSecret = process.env.OUTSETA_API_SECRET;
 
@@ -27,10 +21,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing Outseta API credentials' }, { status: 500 });
     }
 
+    const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+    const accountEndpoint = `https://api.outseta.com/v1/crm/accounts/${accountId}`;
+    const payload = { [fieldName]: imageUrl };
+
+    console.log(`PATCH → ${accountEndpoint}`);
+    console.log("Payload:", payload);
+
     const patchRes = await fetch(accountEndpoint, {
       method: 'PATCH',
       headers: {
-        Authorization: `Outseta ${apiKey}:${apiSecret}`,
+        Authorization: `Basic ${auth}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
