@@ -57,26 +57,26 @@ export default function ChatRenderer({
     );
   };
 
-  const handleSaveToOutseta = async () => {
+  const handleSaveToZapier = async () => {
     if (!userId || !cardId || !imageUrl) return;
+
     try {
-      const fieldName = `${cardId}Image`; // Match Outseta case exactly
-      const res = await fetch('/api/save-to-outseta', {
+      const res = await fetch('https://hooks.zapier.com/hooks/catch/18620594/uyot2sc/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, fieldName, imageUrl })
+        body: JSON.stringify({ userId, cardId, imageUrl, imagePrompt })
       });
 
-      const result = await res.json();
       if (res.ok) {
-        alert('✅ Card saved!');
+        alert('✅ Card sent to Zapier!');
       } else {
-        console.error('❌ Failed to save:', result);
-        alert(`❌ Failed to save image: ${result.detail || result.error}`);
+        const error = await res.text();
+        console.error('Zapier webhook error:', error);
+        alert('❌ Failed to send to Zapier');
       }
     } catch (err) {
-      console.error('❌ Save failed:', err);
-      alert('❌ Unexpected error saving to Outseta.');
+      console.error('Unexpected Zapier error:', err);
+      alert('❌ Error sending to Zapier');
     }
   };
 
@@ -140,7 +140,7 @@ export default function ChatRenderer({
               className="max-w-full max-h-[400px] mx-auto rounded shadow"
             />
             <button
-              onClick={handleSaveToOutseta}
+              onClick={handleSaveToZapier}
               className="mt-4 bg-green-600 text-white px-5 py-2 rounded shadow hover:bg-green-700 transition"
             >
               💾 Save to My Cards
