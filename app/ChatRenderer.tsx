@@ -30,7 +30,6 @@ export default function ChatRenderer({
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [accountId, setAccountId] = useState<string | null>(null);
 
-  // Extract accountId from URL query string once on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const acctId = params.get('accountId');
@@ -65,29 +64,30 @@ export default function ChatRenderer({
     );
   };
 
-  const handleSaveToZapier = async () => {
-    if (!userId || !cardId || !imageUrl || !accountId) {
+  const handleSaveToOutseta = async () => {
+    if (!accountId || !cardId || !imageUrl) {
       alert('❌ Missing required data to save card.');
       return;
     }
 
     try {
-      const res = await fetch('/api/proxy-zapier', {
+      const fieldName = `${cardId}Image`;
+      const res = await fetch('/api/save-to-outseta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, accountId, cardId, imageUrl, imagePrompt })
+        body: JSON.stringify({ accountId, fieldName, imageUrl })
       });
 
       if (res.ok) {
-        alert('✅ Card sent to Zapier!');
+        alert('✅ Card saved to Outseta!');
       } else {
         const error = await res.text();
-        console.error('Zapier webhook error:', error);
-        alert('❌ Failed to send to Zapier');
+        console.error('Outseta save error:', error);
+        alert('❌ Failed to save card');
       }
     } catch (err) {
-      console.error('Unexpected Zapier error:', err);
-      alert('❌ Error sending to Zapier');
+      console.error('Unexpected save error:', err);
+      alert('❌ Error saving to Outseta');
     }
   };
 
@@ -151,7 +151,7 @@ export default function ChatRenderer({
               className="max-w-full max-h-[400px] mx-auto rounded shadow"
             />
             <button
-              onClick={handleSaveToZapier}
+              onClick={handleSaveToOutseta}
               className="mt-4 bg-green-600 text-white px-5 py-2 rounded shadow hover:bg-green-700 transition"
             >
               💾 Save to My Cards
