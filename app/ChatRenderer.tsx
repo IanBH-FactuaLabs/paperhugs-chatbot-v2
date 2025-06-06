@@ -29,29 +29,29 @@ export default function ChatRenderer({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, status, imageUrl]);
 
-  const formatStructuredReply = (content: string) => {
-    const bulletParts = content.split(' - ').filter(Boolean);
-    const bullets = bulletParts.map((item, i) => {
-      const [label, ...rest] = item.split(':');
-      if (!rest.length) return null;
-      return (
-        <li key={i}>
-          <span className="font-medium">{label.trim()}:</span> {rest.join(':').trim()}
-        </li>
-      );
-    });
-    return <ul className="list-disc ml-6 mt-1 text-left space-y-1">{bullets}</ul>;
+  const extractVisibleContent = (content: string) => {
+    const jsonMatch = content.match(/\{[^}]*"action":"generate_image"[^}]*\}/);
+    if (!jsonMatch) return content.trim();
+    return content.replace(jsonMatch[0], '').trim();
   };
 
-  const isStructuredReply = (content: string) =>
-    content.includes('Occasion:') &&
-    content.includes('Relationship:') &&
-    content.includes('Tone:');
-
-  const isHiddenJsonAction = (content: string) =>
-    content.startsWith('{') &&
-    content.includes('"action":"generate_image"') &&
-    content.includes('"imagePrompt"');
+  const formatMarkdownBullets = (text: string) => {
+    const bulletPattern = /\*\*(.+?)\*\*:\s*(.+?)(?=(\s*-\s*\*\*|$))/g;
+    const bullets: JSX.Element[] = [];
+    let match;
+    while ((match = bulletPattern.exec(text)) !== null) {
+      bullets.push(
+        <li key={match[1]}>
+          <strong>{match[1].trim()}:</strong> {match[2].trim()}
+        </li>
+      );
+    }
+    return bullets.length > 0 ? (
+      <ul className="list-disc ml-6 mt-1 text-left space-y-1">{bullets}</ul>
+    ) : (
+      <span>{text}</span>
+    );
+  };
 
   return (
     <div className="max-w-2xl mx-auto mt-10 p-4 font-sans">
@@ -66,9 +66,11 @@ export default function ChatRenderer({
         )}
 
         {messages.map((m, i) => {
-          if (m.role === 'assistant' && isHiddenJsonAction(m.content)) return null;
+          if (m.role === 'assistant' && m.content.startsWith('{') && m.content.includes('"generate_image"')) {
+            return null;
+          }
 
-          const isStructured = m.role === 'assistant' && isStructuredReply(m.content);
+          const visibleContent = extractVisibleContent(m.content);
 
           return (
             <div key={i} className={`mb-3 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
@@ -79,7 +81,7 @@ export default function ChatRenderer({
                     : 'bg-gray-200 text-gray-900'
                 }`}
               >
-                {isStructured ? formatStructuredReply(m.content) : <span>{m.content}</span>}
+                {m.role === 'assistant' ? formatMarkdownBullets(visibleContent) : <span>{visibleContent}</span>}
               </div>
             </div>
           );
@@ -140,4 +142,3 @@ export default function ChatRenderer({
     </div>
   );
 }
-

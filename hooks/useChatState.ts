@@ -34,9 +34,11 @@ export default function useChatState(
     let prompt: string | null = null;
 
     try {
-      const parsed = JSON.parse(match[0]);
+      const cleanedMatch = match[0].replace(/[.,\s]+$/, '');
+      const parsed = JSON.parse(cleanedMatch);
       prompt = parsed.imagePrompt || null;
-    } catch {
+    } catch (err) {
+      console.warn('⚠️ Failed to parse action JSON block');
       prompt = null;
     }
 
@@ -63,7 +65,7 @@ export default function useChatState(
     });
 
     const data = await res.json();
-    let replyText: string = data.reply ?? '';
+    const replyText: string = data.reply ?? '';
     const { cleanedText, prompt } = extractActionJson(replyText);
 
     if (prompt) setImagePrompt(prompt);
