@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Message } from '../lib/schema';
 
 export default function ChatRenderer({
@@ -28,6 +28,14 @@ export default function ChatRenderer({
   onGenerate: () => void;
 }) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [accountId, setAccountId] = useState<string | null>(null);
+
+  // Extract accountId from URL query string once on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const acctId = params.get('accountId');
+    if (acctId) setAccountId(acctId);
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,13 +66,16 @@ export default function ChatRenderer({
   };
 
   const handleSaveToZapier = async () => {
-    if (!userId || !cardId || !imageUrl) return;
+    if (!userId || !cardId || !imageUrl || !accountId) {
+      alert('❌ Missing required data to save card.');
+      return;
+    }
 
     try {
       const res = await fetch('/api/proxy-zapier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, cardId, imageUrl, imagePrompt })
+        body: JSON.stringify({ userId, accountId, cardId, imageUrl, imagePrompt })
       });
 
       if (res.ok) {

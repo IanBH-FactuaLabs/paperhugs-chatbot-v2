@@ -3,14 +3,22 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log('[proxy-zapier] Forwarding payload to Zapier:', body);
+    const { userId, accountId, cardId, imageUrl, imagePrompt } = body;
+
+    if (!userId || !accountId || !cardId || !imageUrl) {
+      console.warn('[proxy-zapier] ❌ Missing required fields', { userId, accountId, cardId, imageUrl });
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const payload = { userId, accountId, cardId, imageUrl, imagePrompt };
+    console.log('[proxy-zapier] Forwarding payload to Zapier:', payload);
 
     const zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/18620594/uyot2sc/';
 
     const zapierRes = await fetch(zapierWebhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(payload)
     });
 
     if (!zapierRes.ok) {
