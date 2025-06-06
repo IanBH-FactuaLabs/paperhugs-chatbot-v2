@@ -16,18 +16,21 @@ export async function POST(req: NextRequest) {
     const accountEndpoint = `https://api.outseta.com/v1/crm/accounts/${accountId}`;
     const payload = { [fieldName]: imageUrl };
 
-    // Correct Basic Auth encoding
-    const basicAuth = Buffer.from(
-      `${process.env.OUTSETA_API_KEY}:${process.env.OUTSETA_API_SECRET}`
-    ).toString('base64');
-
     console.log(`PATCH → ${accountEndpoint}`);
     console.log("Payload:", payload);
+
+    const apiKey = process.env.OUTSETA_API_KEY;
+    const apiSecret = process.env.OUTSETA_API_SECRET;
+
+    if (!apiKey || !apiSecret) {
+      console.error("[/api/save-to-outseta] ❌ Missing Outseta API credentials");
+      return NextResponse.json({ error: 'Missing Outseta API credentials' }, { status: 500 });
+    }
 
     const patchRes = await fetch(accountEndpoint, {
       method: 'PATCH',
       headers: {
-        Authorization: `Basic ${basicAuth}`,
+        Authorization: `Outseta ${apiKey}:${apiSecret}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
