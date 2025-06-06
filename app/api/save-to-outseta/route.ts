@@ -12,27 +12,50 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const endpoint = `https://api.outseta.com/v1/crm/accounts/user/${userId}`;
-    const payload = { [fieldName]: imageUrl };
-
-    console.log(`PATCH → ${endpoint}`);
-    console.log('Payload:', payload);
-
-    const res = await fetch(endpoint, {
-      method: 'PATCH',
+    // Step 1: Look up the Person to get the associated Account UID
+    const personRes = await fetch(`https://api.outseta.com/v1/crm/people/${userId}`, {
       headers: {
-        'Authorization': `Bearer ${process.env.OUTSETA_API_KEY}`,
+        Authorization: `Bearer ${process.env.OUTSETA_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload)
     });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error(`[Outseta PATCH error ${res.status}]`, errorText);
+    if (!personRes.ok) {
+      const personError = await personRes.text();
+      console.error(`[Outseta Person Lookup Error ${personRes.status}]`, personError);
+      return NextResponse.json({ error: 'Failed to fetch person info', detail: personError }, { status: personRes.status });
+    }
+
+    const person = await personRes.json();
+    const accountUid = person?.Account?.Uid;
+
+    if (!accountUid) {
+      console.error("[/api/save-to-outseta] ❌ No Account UID found for person", userId);
+      return NextResponse.json({ error: 'No Account UID found for user' }, { status: 400 });
+    }
+
+    // Step 2: PATCH the account
+    const accountEndpoint = `https://api.outseta.com/v1/crm/accounts/${accountUid}`;
+    const payload = { [fieldName]: imageUrl };
+
+    console.log(`PATCH → ${accountEndpoint}`);
+    console.log("Payload:", payload);
+
+    const patchRes = await fetch(accountEndpoint, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${process.env.OUTSETA_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!patchRes.ok) {
+      const errorText = await patchRes.text();
+      console.error(`[Outseta PATCH error ${patchRes.status}]`, errorText);
       return NextResponse.json(
-        { error: 'Failed to update Outseta account field', status: res.status, detail: errorText },
-        { status: res.status }
+        { error: 'Failed to update Outseta account field', status: patchRes.status, detail: errorText },
+        { status: patchRes.status }
       );
     }
 
