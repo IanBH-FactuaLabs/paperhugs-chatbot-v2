@@ -25,7 +25,7 @@ export default function ChatRenderer({
     <div className="max-w-2xl mx-auto mt-10 p-4 font-sans">
       <h1 className="text-center text-2xl font-bold mb-4">PaperHugs 🎨</h1>
 
-      <div className="border rounded p-4 h-[500px] overflow-y-auto bg-gray-50 mb-4">
+      <div className="border rounded p-4 max-h-[70vh] overflow-y-auto bg-gray-50 mb-4">
         {status === 'initializing' && (
           <div className="text-center text-gray-500">
             <div className="animate-spin inline-block w-6 h-6 border-2 border-t-blue-500 border-gray-300 rounded-full mr-2" />
